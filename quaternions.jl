@@ -41,6 +41,11 @@ returns:
 function dθ(dq)
     dq₀, dq⃗ = dq[1], dq[2:4]
     magnitude = norm(dq⃗)
+
+    if magnitude ≈ 0
+        return zeros(3)  # No rotation, return zero vector
+    end
+
     θ = 2 * atan(magnitude / dq₀)
     u = dq⃗ / magnitude
     return θ * u

@@ -13,12 +13,12 @@ using .Quadrotor
 quadrotor = Quadrotor.System([0, 0, -9.81], 1, I(3), 0.3)
 
 # Equlibrium
-x₀ = zeros(3)
+r₀ = zeros(3)
 q₀ = [1, 0, 0, 0]
 v₀ = zeros(3)
 ω₀ = zeros(3)
 
-x₀ = vcat(x₀, q₀, v₀, ω₀)
+x₀ = vcat(r₀, q₀, v₀, ω₀)
 
 u₀ = 9.81 / 4 * ones(4) / cos(pi / 32)
 
@@ -39,13 +39,19 @@ Q = diagm(vcat(1e1 * ones(6), 1e0 * ones(6)))
 R = 1e-1 * Matrix(I(4))
 
 P, _ = arec(A, B, R, Q)
-K = inv(R) * B' * P
+K = -inv(R) * B' * P
 
 # Simulation
+function controlled_system_dynamics(x)
+    dx = Quadrotor.state_difference(x, x₀)
+    du = K * dx
+    Quadrotor.forward_dynamics(quadrotor, x, u₀ + du)
+end
+
 prob = ODEProblem(
-    (x,_,_)->Quadrotor.forward_dynamics(quadrotor,x,u₀.-0.1),
-    x₀,
-    (0., 1.)
+    (x, _, _) -> controlled_system_dynamics(x),
+    vcat([-1, -1, -1], q₀, v₀, ω₀),
+    (0.0, 5.0)
 )
 
 sol = solve(prob)
