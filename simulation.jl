@@ -10,8 +10,7 @@ include("quadrotor.jl")
 using .Quadrotor
 
 # Properties of the quadrotor
-rotor_deviation = pi / 32
-quadrotor = Quadrotor.System([0, 0, -9.81], 1, I(3), 0.3, rotor_deviation)
+quadrotor = Quadrotor.System([0, 0, -9.81], 1, I(3), 0.3, 0.01)
 
 # Equlibrium
 r₀ = zeros(3)
@@ -21,7 +20,7 @@ v₀ = zeros(3)
 
 x₀ = vcat(r₀, q₀, v₀, ω₀)
 
-u₀ = 9.81 / 4 * ones(4) / cos(rotor_deviation)
+u₀ = 9.81 / 4 * ones(4)
 
 ## validation
 ω̇₀ = Quadrotor.angular_acceleration(quadrotor, [0, 0, 0], u₀)
