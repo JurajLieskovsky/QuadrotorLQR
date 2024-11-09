@@ -22,34 +22,36 @@ x₀ = vcat(r₀, q₀, v₀, ω₀)
 
 u₀ = 9.81 / 4 * ones(4) / cos(pi / 32)
 
-## Equilibrium double-check
+## validation
 ω̇₀ = Quadrotor.angular_acceleration(quadrotor, [0, 0, 0], u₀)
 v̇₀ = Quadrotor.linear_acceleration(quadrotor, q₀, u₀)
 
 @assert ω̇₀ == zeros(3)
 @assert v̇₀ == zeros(3)
 
-# Linearization of the system's dynamics (tangent-space)
+# LQR controller
+## linearization of the system's dynamics (tangent-space)
 dz₀ = zeros(12)
 A = ForwardDiff.jacobian(dz -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz, u₀), dz₀)
 B = ForwardDiff.jacobian(u -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz₀, u), u₀)
 
-# LQR
+## running cost
 Q = diagm(vcat(1e1 * ones(6), 1e0 * ones(6)))
 R = 1e-1 * Matrix(I(4))
 
+## state-feedback
 P, _ = arec(A, B, R, Q)
 K = -inv(R) * B' * P
 
 # Simulation
-function controlled_system_dynamics(x)
+function controlled_dynamics(quadrotor, x₀, u₀, x)
     dx = Quadrotor.state_difference(x, x₀)
     du = K * dx
     Quadrotor.forward_dynamics(quadrotor, x, u₀ + du)
 end
 
 prob = ODEProblem(
-    (x, _, _) -> controlled_system_dynamics(x),
+    (x, _, _) -> controlled_dynamics(quadrotor, x₀, u₀, x),
     vcat([-1, -1, -1], q₀, v₀, ω₀),
     (0.0, 5.0)
 )
