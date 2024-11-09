@@ -1,6 +1,10 @@
 using Revise
+
 using LinearAlgebra
 using ForwardDiff
+using MatrixEquations: arec
+using OrdinaryDiffEq
+using Plots
 
 include("quadrotor.jl")
 using .Quadrotor
@@ -16,7 +20,7 @@ v₀ = zeros(3)
 
 x₀ = vcat(x₀, q₀, v₀, ω₀)
 
-u₀ = 9.81 / 4 * ones(4)
+u₀ = 9.81 / 4 * ones(4) / cos(pi / 32)
 
 ## Equilibrium double-check
 ω̇₀ = Quadrotor.angular_acceleration(quadrotor, [0, 0, 0], u₀)
@@ -29,3 +33,20 @@ v̇₀ = Quadrotor.linear_acceleration(quadrotor, q₀, u₀)
 dz₀ = zeros(12)
 A = ForwardDiff.jacobian(dz -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz, u₀), dz₀)
 B = ForwardDiff.jacobian(u -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz₀, u), u₀)
+
+# LQR
+Q = diagm(vcat(1e1 * ones(6), 1e0 * ones(6)))
+R = 1e-1 * Matrix(I(4))
+
+P, _ = arec(A, B, R, Q)
+K = inv(R) * B' * P
+
+# Simulation
+prob = ODEProblem(
+    (x,_,_)->Quadrotor.forward_dynamics(quadrotor,x,u₀.-0.1),
+    x₀,
+    (0., 1.)
+)
+
+sol = solve(prob)
+plot(sol)
