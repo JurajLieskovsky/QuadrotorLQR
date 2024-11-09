@@ -102,6 +102,33 @@ function incremented_state(x₀, dz)
     return vcat(r + dr, q + Quaternions.q̇(q, dθ), v + dv, ω + dω)
 end
 
+# State difference utility
+
+"""
+Calculates the difference between the current and reference state in the tangential space of the reference state.
+
+arguments:
+    x  - current state
+    x₀ - reference state
+
+returns:
+    dz - state difference (dz = [dr, dθ, dv, dω]) 
+    
+The approximation x ≈ x₀ + dx(dz), where dx = [dr, q̇(q,dθ), dv, dω], should be accurate for very small values of dθ
+    
+"""
+function state_difference(x, x₀)
+    @assert length(x) == 13
+    @assert length(x₀) == 13
+
+    dr = x[1:3] - x₀[1:3]
+    dθ = Quaternions.dθ(Quaternions.multiply(x[4:7], Quaternions.conjugate(x₀[4:7])))
+    dv = x[8:10] - x₀[8:10]
+    dω = x[11:13] - x₀[11:13]
+
+    return vcat(dr, dθ, dv, dω)
+end
+
 # State space descriptions
 
 """
