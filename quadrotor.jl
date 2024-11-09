@@ -15,19 +15,19 @@ struct System
     Wrot::Matrix # moment matrix
     Wlin::Matrix # thrust matrix
 
-    function System(gravitation_accelaration, mass, moment_of_inertia, arm_length)
+    function System(gravitation_accelaration, mass, moment_of_inertia, arm_length, deviation)
         rotor_radius_vectors = [
             [1, -1, 0],
             [1, 1, 0],
             [-1, 1, 0],
             [-1, -1, 0]
         ]
-        ϕ = pi / 32
+        deviation = pi / 32
         thrust_vectors = [
-            [0, -sin(ϕ), cos(ϕ)],
-            [0, sin(ϕ), cos(ϕ)],
-            [0, sin(ϕ), cos(ϕ)],
-            [0, -sin(ϕ), cos(ϕ)]
+            [0, -sin(deviation), cos(deviation)],
+            [0, sin(deviation), cos(deviation)],
+            [0, sin(deviation), cos(deviation)],
+            [0, -sin(deviation), cos(deviation)]
         ]
         moment_matrix = mapreduce(
             arg -> arg[1] × arg[2] * arm_length,
@@ -75,7 +75,7 @@ returns:
 """
 function linear_acceleration(p::System, q, u)
     @unpack g, m, Wlin = p
-    F = Wlin*u
+    F = Wlin * u
     return g + Quaternions.rot(q, F) / m
 end
 

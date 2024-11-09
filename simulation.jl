@@ -10,7 +10,8 @@ include("quadrotor.jl")
 using .Quadrotor
 
 # Properties of the quadrotor
-quadrotor = Quadrotor.System([0, 0, -9.81], 1, I(3), 0.3)
+rotor_deviation = pi / 32
+quadrotor = Quadrotor.System([0, 0, -9.81], 1, I(3), 0.3, rotor_deviation)
 
 # Equlibrium
 r₀ = zeros(3)
@@ -20,7 +21,7 @@ v₀ = zeros(3)
 
 x₀ = vcat(r₀, q₀, v₀, ω₀)
 
-u₀ = 9.81 / 4 * ones(4) / cos(pi / 32)
+u₀ = 9.81 / 4 * ones(4) / cos(rotor_deviation)
 
 ## validation
 ω̇₀ = Quadrotor.angular_acceleration(quadrotor, [0, 0, 0], u₀)
@@ -59,7 +60,7 @@ sol = solve(prob)
 
 # Plotting
 plt = plot()
-plot!(plt, sol, idxs=[1,2,3], label=["x" "y" "z"])
-plot!(plt, sol, idxs=[4,5,6,7], label=["q₀" "q₁" "q₂" "q₃"])
+plot!(plt, sol, idxs=[1, 2, 3], label=["x" "y" "z"])
+plot!(plt, sol, idxs=[4, 5, 6, 7], label=["q₀" "q₁" "q₂" "q₃"])
 # plot!(plt, sol, idxs=[8,9,10], label=["vx" "vy" "vz"])
 # plot!(plt, sol, idxs=[11,12,13], label=["ωx" "ωy" "ωz"])
