@@ -28,7 +28,16 @@ function q̇(q, ω)
     return 0.5 * vcat(-q⃗'ω, q₀ * ω + q⃗ × ω)
 end
 
-""" quaternion space increment to tangent space increment """
+"""
+Approximates a quaternion as a rotation about an arbitrary axis.
+
+arguments:
+    dq - quaternion
+
+returns:
+    dθ - angle * axis of rotation
+
+"""
 function dθ(dq)
     dq₀, dq⃗ = dq[1], dq[2:4]
     magnitude = norm(dq⃗)
