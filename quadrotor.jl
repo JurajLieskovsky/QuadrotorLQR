@@ -99,7 +99,7 @@ end
 # State difference utility
 
 """
-Calculates the difference between the current and reference state in the tangential space of the reference state.
+Calculates the difference between the current and reference state in the tangential direction of the reference state.
 
 arguments:
     x  - current state
@@ -129,11 +129,11 @@ end
 Calculates the rate of change of the state according to the state description ẋ = f(x,u).
 
 arguments:
-x - system's state (x = [r,q,v,ω])
+x - system's state (x = [r, q, v, ω])
 u - control inputs
 
 returns:
-ẋ - rate of change of the state (ẋ = [v,q̇,v̇,ω̇])
+ẋ - rate of change of the state (ẋ = [v, q̇, v̇, ω̇])
 
 """
 function forward_dynamics(properties, x, u)
@@ -149,15 +149,15 @@ end
 
 
 """
-Calculates the rate of change of the state in the tangent direction.
+Calculates the rate of change of the state in the tangential direction.
 
 arguments:
-x₀ - system's state (x₀ = [r,q,v,ω])
+x₀ - system's state (x₀ = [r, q, v, ω])
 dz - increment of the state (dz = [dr, dθ, dv, dω]) 
 u  - control inputs
 
 returns:
-dż - rate of change of the state in tangent-space (dż = [v,ω,v̇,ω̇])
+dż - rate of change of the state in tangential direction (dż = [v, ω, v̇, ω̇])
 
 """
 function tangent_forward_dynamics(properties, x₀, dz, u)
