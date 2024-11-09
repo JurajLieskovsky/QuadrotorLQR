@@ -12,23 +12,25 @@ struct System
     g::Vector # gravitation acceleration
     m::Real   # mass
     J::Matrix # moment of inertia
-    Wrot::Matrix # moment matrix
-    Wlin::Matrix # thrust matrix
+    A::Matrix # thrust moment matrix
+    L::Matrix # thrust force matrix
 
-    function System(gravitation_accelaration, mass, moment_of_inertia, arm_length, deviation)
+    function System(gravitation_accelaration, mass, moment_of_inertia, arm_length, thrust_deviation)
         rotor_radius_vectors = [
             [1, -1, 0],
             [1, 1, 0],
             [-1, 1, 0],
             [-1, -1, 0]
         ]
-        deviation = pi / 32
+
+        a, h = sincos(thrust_deviation)
         thrust_vectors = [
-            [0, -sin(deviation), cos(deviation)],
-            [0, sin(deviation), cos(deviation)],
-            [0, sin(deviation), cos(deviation)],
-            [0, -sin(deviation), cos(deviation)]
+            [0, -a, h],
+            [0, a, h],
+            [0, a, h],
+            [0, -a, h]
         ]
+
         moment_matrix = mapreduce(
             arg -> arg[1] × arg[2] * arm_length,
             hcat,
@@ -55,9 +57,8 @@ returns:
 
 """
 function angular_acceleration(p::System, ω, u)
-    @unpack J, Wrot = p
-    T = Wrot * u
-    return J \ (T - ω × (J * ω))
+    @unpack J, A = p
+    return J \ (A * u - ω × (J * ω))
 end
 
 
@@ -74,9 +75,8 @@ returns:
 
 """
 function linear_acceleration(p::System, q, u)
-    @unpack g, m, Wlin = p
-    F = Wlin * u
-    return g + Quaternions.rot(q, F) / m
+    @unpack g, m, L = p
+    return g + Quaternions.rot(q, L * u) / m
 end
 
 # State incrementation utility
