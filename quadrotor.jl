@@ -80,7 +80,7 @@ x₀ - system's state (x₀ = [r, q, v, ω])
 dz - incrementation of the state (dz = [dr, dθ, dv, dω]) 
 
 returns:
-x₀ + dx(dz) - incremented state (dx = [dr, dq(q,dθ), dv, dω])
+x₀ + dx(dz) - incremented state (dx = [dr, q̇(q,dθ), dv, dω])
 
 """
 function incremented_state(x₀, dz)
@@ -90,7 +90,7 @@ function incremented_state(x₀, dz)
     r, q, v, ω = x₀[1:3], x₀[4:7], x₀[8:10], x₀[11:13]
     dr, dθ, dv, dω = dz[1:3], dz[4:6], dz[7:9], dz[10:12]
 
-    return vcat(r + dr, q + Quaternions.dq(q, dθ), v + dv, ω + dω)
+    return vcat(r + dr, q + Quaternions.q̇(q, dθ), v + dv, ω + dω)
 end
 
 # State space descriptions
@@ -114,7 +114,7 @@ function forward_dynamics(properties, x, u)
     ω̇ = angular_acceleration(properties, ω, u)
     v̇ = linear_acceleration(properties, q, u)
 
-    return vcat(v, Quaternions.dq(q, ω), v̇, ω̇)
+    return vcat(v, Quaternions.q̇(q, ω), v̇, ω̇)
 end
 
 

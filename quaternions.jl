@@ -12,10 +12,20 @@ function multiply(p, q)
     return vcat(p₀ * q₀ - p⃗'q⃗, p₀ * q⃗ + q₀ * p⃗ + p⃗ × q⃗)
 end
 
-""" tangent space increment to quaternion space increment """
-function dq(q, dθ)
+"""
+Converts angular velocity to a quaternion's rate of change.
+
+arguments:
+    q - quaternion
+    ω - angular velocity (in the coordinates of q)
+
+returns:
+    q̇ - quaternion's rate of change
+
+"""
+function q̇(q, ω)
     q₀, q⃗ = q[1], q[2:4]
-    return 0.5 * vcat(-q⃗'dθ, q₀ * dθ + q⃗ × dθ) # linear operation
+    return 0.5 * vcat(-q⃗'ω, q₀ * ω + q⃗ × ω)
 end
 
 """ quaternion space increment to tangent space increment """
