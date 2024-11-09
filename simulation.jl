@@ -55,6 +55,11 @@ prob = ODEProblem(
     vcat([-1, -1, -1], q₀, v₀, ω₀),
     (0.0, 5.0)
 )
-
 sol = solve(prob)
-plot(sol)
+
+# Plotting
+plt = plot()
+plot!(plt, sol, idxs=[1,2,3], label=["x" "y" "z"])
+plot!(plt, sol, idxs=[4,5,6,7], label=["q₀" "q₁" "q₂" "q₃"])
+# plot!(plt, sol, idxs=[8,9,10], label=["vx" "vy" "vz"])
+# plot!(plt, sol, idxs=[11,12,13], label=["ωx" "ωy" "ωz"])
