@@ -1,0 +1,3 @@
+[submodule "deps/QuadrotorODE"]
+	path = deps/QuadrotorODE
+	url = git@github.com:JurajLieskovsky/QuadrotorODE.jl.git

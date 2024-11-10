@@ -5,8 +5,7 @@ using ForwardDiff
 using OrdinaryDiffEq
 using Plots
 
-include("quadrotor.jl")
-using .Quadrotor
+using QuadrotorODE
 
 lqr_time_domain = :continuous
 
@@ -21,7 +20,7 @@ end
 
 
 # Properties of the quadrotor
-quadrotor = Quadrotor.System([0, 0, -9.81], 1, I(3), 0.3, 0.01)
+quadrotor = QuadrotorODE.System([0, 0, -9.81], 1, I(3), 0.3, 0.01)
 
 # Equlibrium
 r₀ = zeros(3)
@@ -33,8 +32,8 @@ x₀ = vcat(r₀, q₀, v₀, ω₀)
 u₀ = 9.81 / 4 * ones(4)
 
 ## validation
-ω̇₀ = Quadrotor.angular_acceleration(quadrotor, [0, 0, 0], u₀)
-v̇₀ = Quadrotor.linear_acceleration(quadrotor, q₀, u₀)
+ω̇₀ = QuadrotorODE.angular_acceleration(quadrotor, [0, 0, 0], u₀)
+v̇₀ = QuadrotorODE.linear_acceleration(quadrotor, q₀, u₀)
 
 @assert ω̇₀ == zeros(3)
 @assert v̇₀ == zeros(3)
@@ -43,8 +42,8 @@ v̇₀ = Quadrotor.linear_acceleration(quadrotor, q₀, u₀)
 ## linearization of the system's dynamics (tangent-space)
 if lqr_time_domain == :continuous
     dz₀ = zeros(12)
-    A = ForwardDiff.jacobian(dz -> Quadrotor.tangential_forward_dynamics(quadrotor, x₀, dz, u₀), dz₀)
-    B = ForwardDiff.jacobian(u -> Quadrotor.tangential_forward_dynamics(quadrotor, x₀, dz₀, u), u₀)
+    A = ForwardDiff.jacobian(dz -> QuadrotorODE.tangential_forward_dynamics(quadrotor, x₀, dz, u₀), dz₀)
+    B = ForwardDiff.jacobian(u -> QuadrotorODE.tangential_forward_dynamics(quadrotor, x₀, dz₀, u), u₀)
 
 elseif lqr_time_domain == :discrete
     rk4 = RungeKutta.RK4()
@@ -52,7 +51,7 @@ elseif lqr_time_domain == :discrete
     f!(dznew, x₀, dz, u) = RungeKutta.f!(
         dznew,
         rk4,
-        (dznew, dz, u) -> dznew .= Quadrotor.tangential_forward_dynamics(quadrotor, x₀, dz, u),
+        (dznew, dz, u) -> dznew .= QuadrotorODE.tangential_forward_dynamics(quadrotor, x₀, dz, u),
         dz,
         u,
         1e-4
@@ -78,12 +77,12 @@ end
 K = -inv(R) * B' * P
 
 ## controller
-controller(x₀, u₀, x) = u₀ + K * Quadrotor.state_difference(x, x₀)
+controller(x₀, u₀, x) = u₀ + K * QuadrotorODE.state_difference(x, x₀)
 
 # Simulation
 tspan = (0.0, 15.0)
 prob = ODEProblem(
-    (x, _, _) -> Quadrotor.forward_dynamics(quadrotor, x, controller(x₀, u₀, x)),
+    (x, _, _) -> QuadrotorODE.forward_dynamics(quadrotor, x, controller(x₀, u₀, x)),
     vcat([-3, -3, -1], [cos(pi / 16), 0, 0, sin(pi / 16)], v₀, ω₀),
     tspan
 )
