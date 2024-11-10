@@ -2,12 +2,23 @@ using Revise
 
 using LinearAlgebra
 using ForwardDiff
-using MatrixEquations: arec
 using OrdinaryDiffEq
 using Plots
 
 include("quadrotor.jl")
 using .Quadrotor
+
+lqr_time_domain = :continuous
+
+if lqr_time_domain == :continuous
+    using MatrixEquations: arec
+
+elseif lqr_time_domain == :discrete
+    include("runge_kutta.jl")
+    using .RungeKutta
+    using MatrixEquations: ared
+end
+
 
 # Properties of the quadrotor
 quadrotor = Quadrotor.System([0, 0, -9.81], 1, I(3), 0.3, 0.01)
@@ -30,16 +41,40 @@ v̇₀ = Quadrotor.linear_acceleration(quadrotor, q₀, u₀)
 
 # LQR controller
 ## linearization of the system's dynamics (tangent-space)
-dz₀ = zeros(12)
-A = ForwardDiff.jacobian(dz -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz, u₀), dz₀)
-B = ForwardDiff.jacobian(u -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz₀, u), u₀)
+if lqr_time_domain == :continuous
+    dz₀ = zeros(12)
+    A = ForwardDiff.jacobian(dz -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz, u₀), dz₀)
+    B = ForwardDiff.jacobian(u -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz₀, u), u₀)
+
+elseif lqr_time_domain == :discrete
+    rk4 = RungeKutta.RK4()
+
+    f!(dznew, x₀, dz, u) = RungeKutta.f!(
+        dznew,
+        rk4,
+        (dznew, dz, u) -> dznew .= Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz, u),
+        dz,
+        u,
+        1e-4
+    )
+
+    dz₀ = zeros(12)
+    A = ForwardDiff.jacobian((dznew, dz) -> f!(dznew, x₀, dz, u₀), zeros(12), dz₀)
+    B = ForwardDiff.jacobian((dznew, u) -> f!(dznew, x₀, dz₀, u), zeros(12), u₀)
+end
 
 ## running cost
 Q = diagm(vcat(1e1 * ones(6), 1e0 * ones(6)))
 R = 2e1 * Matrix(I(4))
 
 ## state-feedback
-P, _ = arec(A, B, R, Q)
+if lqr_time_domain == :continuous
+    P, _ = arec(A, B, R, Q)
+
+elseif lqr_time_domain == :discrete
+    P, _ = ared(A, B, R, Q)
+end
+
 K = -inv(R) * B' * P
 
 ## controller
