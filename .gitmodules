@@ -1,3 +1,6 @@
 [submodule "deps/QuadrotorODE"]
 	path = deps/QuadrotorODE
 	url = git@github.com:JurajLieskovsky/QuadrotorODE.jl.git
+[submodule "deps/RungeKutta"]
+	path = deps/RungeKutta
+	url = git@github.com:JurajLieskovsky/RungeKutta.jl.git

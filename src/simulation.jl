@@ -13,8 +13,7 @@ if lqr_time_domain == :continuous
     using MatrixEquations: arec
 
 elseif lqr_time_domain == :discrete
-    include("runge_kutta.jl")
-    using .RungeKutta
+    using RungeKutta
     using MatrixEquations: ared
 end
 
