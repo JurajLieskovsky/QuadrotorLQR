@@ -43,8 +43,8 @@ v̇₀ = Quadrotor.linear_acceleration(quadrotor, q₀, u₀)
 ## linearization of the system's dynamics (tangent-space)
 if lqr_time_domain == :continuous
     dz₀ = zeros(12)
-    A = ForwardDiff.jacobian(dz -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz, u₀), dz₀)
-    B = ForwardDiff.jacobian(u -> Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz₀, u), u₀)
+    A = ForwardDiff.jacobian(dz -> Quadrotor.tangential_forward_dynamics(quadrotor, x₀, dz, u₀), dz₀)
+    B = ForwardDiff.jacobian(u -> Quadrotor.tangential_forward_dynamics(quadrotor, x₀, dz₀, u), u₀)
 
 elseif lqr_time_domain == :discrete
     rk4 = RungeKutta.RK4()
@@ -52,7 +52,7 @@ elseif lqr_time_domain == :discrete
     f!(dznew, x₀, dz, u) = RungeKutta.f!(
         dznew,
         rk4,
-        (dznew, dz, u) -> dznew .= Quadrotor.tangent_forward_dynamics(quadrotor, x₀, dz, u),
+        (dznew, dz, u) -> dznew .= Quadrotor.tangential_forward_dynamics(quadrotor, x₀, dz, u),
         dz,
         u,
         1e-4

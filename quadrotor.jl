@@ -41,7 +41,7 @@ end
 Calculates the quadrotor's angular acceleration.
 
 arguments:
-    p - system's properties
+    system - properties of the quadrotor
     ω - angular velocity (in the frame of the quadrotor)
     u - control inputs
 
@@ -49,8 +49,8 @@ returns:
     ω̇ - angular accelaration
 
 """
-function angular_acceleration(p::System, ω, u)
-    @unpack J, W = p
+function angular_acceleration(system::System, ω, u)
+    @unpack J, W = system
     return J \ (W * u - ω × (J * ω))
 end
 
@@ -59,7 +59,7 @@ end
 Calculates the quadrotor's linear acceleration.
 
 arguments:
-    p - system's properties
+    system - properties of the quadrotor
     q - orientation of the quadrotor (quaternion)
     u - control inputs
 
@@ -67,8 +67,8 @@ returns:
     ω̇ - angular accelaration
 
 """
-function linear_acceleration(p::System, q, u)
-    @unpack g, m = p
+function linear_acceleration(system::System, q, u)
+    @unpack g, m = system
     F = [0, 0, sum(u)]
     return g + Quaternions.rot(q, F) / m
 end
@@ -129,6 +129,7 @@ end
 Calculates the rate of change of the state according to the state description ẋ = f(x,u).
 
 arguments:
+system - properties of the quadrotor
 x - system's state (x = [r, q, v, ω])
 u - control inputs
 
@@ -136,13 +137,13 @@ returns:
 ẋ - rate of change of the state (ẋ = [v, q̇, v̇, ω̇])
 
 """
-function forward_dynamics(properties, x, u)
+function forward_dynamics(system, x, u)
     @assert length(x) == 13
     @assert length(u) == 4
 
     _, q, v, ω = x[1:3], x[4:7], x[8:10], x[11:13]
-    ω̇ = angular_acceleration(properties, ω, u)
-    v̇ = linear_acceleration(properties, q, u)
+    ω̇ = angular_acceleration(system, ω, u)
+    v̇ = linear_acceleration(system, q, u)
 
     return vcat(v, Quaternions.q̇(q, ω), v̇, ω̇)
 end
@@ -152,6 +153,7 @@ end
 Calculates the rate of change of the state in the tangential direction.
 
 arguments:
+system - properties of the quadrotor
 x₀ - system's state (x₀ = [r, q, v, ω])
 dz - increment of the state (dz = [dr, dθ, dv, dω]) 
 u  - control inputs
@@ -160,7 +162,7 @@ returns:
 dż - rate of change of the state in tangential direction (dż = [v, ω, v̇, ω̇])
 
 """
-function tangent_forward_dynamics(properties, x₀, dz, u)
+function tangential_forward_dynamics(system, x₀, dz, u)
     @assert length(x₀) == 13
     @assert length(dz) == 12
     @assert length(u) == 4
@@ -168,8 +170,8 @@ function tangent_forward_dynamics(properties, x₀, dz, u)
     x = incremented_state(x₀, dz)
     _, q, v, ω = x[1:3], x[4:7], x[8:10], x[11:13]
 
-    ω̇ = angular_acceleration(properties, ω, u)
-    v̇ = linear_acceleration(properties, q, u)
+    ω̇ = angular_acceleration(system, ω, u)
+    v̇ = linear_acceleration(system, q, u)
 
     return vcat(v, ω, v̇, ω̇)
 end
