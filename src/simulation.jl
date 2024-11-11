@@ -7,6 +7,12 @@ using Plots
 
 using QuadrotorODE
 
+using MeshCat
+using CoordinateTransformations
+using Rotations
+using GeometryBasics
+using Colors: RGB
+
 lqr_time_domain = :continuous
 
 if lqr_time_domain == :continuous
@@ -19,7 +25,8 @@ end
 
 
 # Properties of the quadrotor
-quadrotor = QuadrotorODE.System([0, 0, -9.81], 1, I(3), 0.3, 0.01)
+a = 0.3
+quadrotor = QuadrotorODE.System([0, 0, -9.81], 1, I(3), a, 0.01)
 
 # Equlibrium
 r₀ = zeros(3)
@@ -63,7 +70,7 @@ end
 
 ## running cost
 Q = diagm(vcat(1e1 * ones(6), 1e0 * ones(6)))
-R = 2e1 * Matrix(I(4))
+R = 1e0 * Matrix(I(4))
 
 ## state-feedback
 if lqr_time_domain == :continuous
@@ -79,10 +86,11 @@ K = -inv(R) * B' * P
 controller(x₀, u₀, x) = u₀ + K * QuadrotorODE.state_difference(x, x₀)
 
 # Simulation
-tspan = (0.0, 15.0)
+tspan = (0.0, 10.0)
+x0 = vcat([5, -5, -1], [1, 0, 0, 0], v₀, ω₀)
 prob = ODEProblem(
     (x, _, _) -> QuadrotorODE.forward_dynamics(quadrotor, x, controller(x₀, u₀, x)),
-    vcat([-3, -3, -1], [cos(pi / 16), 0, 0, sin(pi / 16)], v₀, ω₀),
+    x0,
     tspan
 )
 sol = solve(prob)
@@ -102,3 +110,37 @@ input_plot = plot(ts, us, xlabel="t", label=["u₀" "u₁" "u₂" "u₃"])
 
 ## combined
 plot(state_plot, input_plot, layout=(2, 1))
+
+# Visualization
+vis = (@isdefined vis) ? vis : Visualizer()
+render(vis)
+
+## materials (colors)
+red = MeshPhongMaterial(color=RGB(1, 0, 0))
+green = MeshPhongMaterial(color=RGB(0, 1, 0))
+blue = MeshPhongMaterial(color=RGB(0, 0, 1))
+
+## quadrotor
+setobject!(vis[:quadrotor][:body], HyperRectangle(Vec(-a, -a, -0.06), Vec(2 * a, 2 * a, 0.12)), green)
+
+for (i, (x, y)) in enumerate([[a, -a], [a, a], [-a, a], [-a, -a]])
+    setobject!(vis[:quadrotor][Symbol("prop$i")], Cylinder(Point(x, y, 0.03), Point(x, y, 0.09), 0.25), blue)
+end
+
+## target position
+setobject!(vis[:target], Sphere(Point(0.0, 0, 0), 0.12), red)
+
+## initial configuration
+x0 = sol.u[1]
+settransform!(vis[:quadrotor], Translation(x0[1:3]) ∘ LinearMap(QuatRotation(x0[4:7])))
+
+## animation
+timestamps = tspan[1]:1e-2:tspan[2]
+anim = MeshCat.Animation(vis, fps=100)
+for (i, t) in enumerate(timestamps[2:end])
+    atframe(anim, i) do
+        x = sol(t)
+        settransform!(vis[:quadrotor], Translation(x[1:3]) ∘ LinearMap(QuatRotation(x[4:7])))
+    end
+end
+setanimation!(vis, anim, play=false);
