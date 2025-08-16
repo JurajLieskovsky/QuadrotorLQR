@@ -26,7 +26,7 @@ u_eq = 9.81 / 4 * ones(4)
 fx = ForwardDiff.jacobian(x_ -> QuadrotorODE.dynamics(quadrotor, x_, u_eq), x_eq)
 fu = ForwardDiff.jacobian(u_ -> QuadrotorODE.dynamics(quadrotor, x_eq, u_), u_eq)
 
-J = QuadrotorODE.motion_jacobian(x_eq)
+J = QuadrotorODE.jacobian(x_eq)
 
 A = J' * fx * J
 B = J' * fu
