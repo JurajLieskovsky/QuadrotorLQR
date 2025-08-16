@@ -1,0 +1,6 @@
+[submodule "deps/MeshCatBenchmarkMechanisms"]
+	path = deps/MeshCatBenchmarkMechanisms
+	url = git@github.com:JurajLieskovsky/MeshCatBenchmarkMechanisms.jl.git
+[submodule "deps/QuadrotorODE"]
+	path = deps/QuadrotorODE
+	url = git@github.com:JurajLieskovsky/QuadrotorODE.jl.git
