@@ -54,7 +54,7 @@ g = 9.81
 kt = 1.0
 km = 0.0245
 
-h = 0.05 # 20 Hz
+h = 1e-4 # 20 Hz
 
 function E(q)
     E = BlockDiagonal([1.0 * I(3), G(q), 1.0 * I(6)])
@@ -117,11 +117,11 @@ K = inv(R + B' * S * B) * B' * S * A
 
 controller(x) = u_eq - K * QuadrotorODE.state_difference(x, x_eq)
 
-#=
 # Simulation
-tspan = (0.0, 10.0)
-θ = 3 * pi / 8
-x0 = vcat([0, 0, 0], [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
+tspan = (0.0, 4.0)
+# θ = 3 * pi / 8
+θ = 0
+x0 = vcat([0, 0, 1.0], [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
 prob = ODEProblem(
     (x, _, _) -> QuadrotorODE.dynamics(quadrotor, x, controller(x)),
@@ -164,5 +164,3 @@ for (i, x) in enumerate(xs)
     end
 end
 setanimation!(vis, anim, play=false);
-
-=#
