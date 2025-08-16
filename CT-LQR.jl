@@ -29,7 +29,7 @@ fu = ForwardDiff.jacobian(u_ -> QuadrotorODE.dynamics(quadrotor, x_eq, u_), u_eq
 J = QuadrotorODE.motion_jacobian(x_eq)
 
 A = J' * fx * J
-B = 0.5 * J' * fu
+B = J' * fu
 
 # LQR design
 Q = diagm(vcat(1e2 * ones(3), 1e-2 * ones(3), 1e1 * ones(3), 1e-3 * ones(3)))
