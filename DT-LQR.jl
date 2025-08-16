@@ -54,7 +54,7 @@ g = 9.81
 kt = 1.0
 km = 0.0245
 
-h = 1e-4 # 20 Hz
+h = 5e-2 # 20 Hz
 
 function E(q)
     E = BlockDiagonal([1.0 * I(3), G(q), 1.0 * I(6)])
@@ -101,10 +101,10 @@ u_eq = m * 9.81 / 4 * ones(4)
 fx = ForwardDiff.jacobian(x_ -> quad_dynamics_rk4(x_, u_eq), x_eq)
 fu = ForwardDiff.jacobian(u_ -> quad_dynamics_rk4(x_eq, u_), u_eq)
 
-J = QuadrotorODE.motion_jacobian(x_eq)
+j = QuadrotorODE.motion_jacobian(x_eq)
 
-A = J' * fx * J
-B = J' * fu # Should be multiplied by 2 in my case
+A = j' * fx * j
+B = j' * fu # Should be multiplied by 2 in my case
 
 # LQR design
 # Q = diagm(vcat(1e2 * ones(3), 1e-2 * ones(3), 1e1 * ones(3), 1e-3 * ones(3)))
@@ -119,12 +119,11 @@ controller(x) = u_eq - K * QuadrotorODE.state_difference(x, x_eq)
 
 # Simulation
 tspan = (0.0, 4.0)
-# θ = 3 * pi / 8
-θ = 0
+θ = 3 * pi / 8
 x0 = vcat([0, 0, 1.0], [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
 prob = ODEProblem(
-    (x, _, _) -> QuadrotorODE.dynamics(quadrotor, x, controller(x)),
+    (x, _, _) -> quad_dynamics(x, controller(x)),
     x0,
     tspan
 )
