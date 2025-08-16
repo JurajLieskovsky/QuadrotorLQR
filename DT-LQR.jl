@@ -30,20 +30,9 @@ end
 
 T = Diagonal([1; -ones(3)])
 H = [zeros(1, 3); I]
+
 function qtoQ(q)
     return H' * T * L(q) * T * L(q) * H
-end
-
-function G(q)
-    G = L(q) * H
-end
-
-function rptoq(ϕ)
-    (1 / sqrt(1 + ϕ' * ϕ)) * [1; ϕ]
-end
-
-function qtorp(q)
-    q[2:4] / q[1]
 end
 
 #Quadrotor parameters
@@ -55,10 +44,6 @@ kt = 1.0
 km = 0.0245
 
 h = 5e-2 # 20 Hz
-
-function E(q)
-    E = BlockDiagonal([1.0 * I(3), G(q), 1.0 * I(6)])
-end
 
 function quad_dynamics(x, u)
     r = x[1:3]
