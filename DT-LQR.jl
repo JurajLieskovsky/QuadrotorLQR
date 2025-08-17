@@ -10,8 +10,6 @@ using QuadrotorODE
 using MeshCatBenchmarkMechanisms
 
 # Properties of the quadrotor
-a = 0.3
-quadrotor = QuadrotorODE.System([0, 0, -9.81], 1, I(3), a, 0.01)
 
 #Quaternion stuff
 function hat(v)
@@ -62,6 +60,9 @@ function quad_dynamics(x, u)
     return [ṙ; q̇; v̇; ω̇]
 end
 
+a = ℓ
+quadrotor = QuadrotorODE.System([0, 0, -9.81], m, J, a, kt, km)
+
 function quad_dynamics_rk4(x, u)
     #RK4 integration with zero-order hold on u
     f1 = quad_dynamics(x, u)
@@ -69,7 +70,6 @@ function quad_dynamics_rk4(x, u)
     f3 = quad_dynamics(x + 0.5 * h * f2, u)
     f4 = quad_dynamics(x + h * f3, u)
     xn = x + (h / 6.0) * (f1 + 2 * f2 + 2 * f3 + f4)
-    xn[4:7] .= xn[4:7] / norm(xn[4:7]) #re-normalize quaternion
     return xn
 end
 
@@ -87,7 +87,6 @@ fx = ForwardDiff.jacobian(x_ -> quad_dynamics_rk4(x_, u_eq), x_eq)
 fu = ForwardDiff.jacobian(u_ -> quad_dynamics_rk4(x_eq, u_), u_eq)
 
 j = QuadrotorODE.jacobian(x_eq)
-
 A = j' * fx * j
 B = j' * fu # Should be multiplied by 2 in my case
 
@@ -148,3 +147,7 @@ for (i, x) in enumerate(xs)
     end
 end
 setanimation!(vis, anim, play=false);
+
+k = 30
+QuadrotorODE.dynamics(quadrotor, xs[k], us[k])
+quad_dynamics(xs[k],us[k])
