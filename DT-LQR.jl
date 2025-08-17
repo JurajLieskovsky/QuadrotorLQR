@@ -43,32 +43,15 @@ km = 0.0245
 
 h = 5e-2 # 20 Hz
 
-function quad_dynamics(x, u)
-    r = x[1:3]
-    q = x[4:7] / norm(x[4:7]) #normalize q just to be careful
-    v = x[8:10]
-    ω = x[11:13]
-    Q = qtoQ(q)
-
-    ṙ = Q * v
-    q̇ = 0.5 * L(q) * H * ω
-
-    v̇ = Q' * [0; 0; -g] + (1 / m) * [zeros(2, 4); kt * ones(1, 4)] * u - hat(ω) * v
-
-    ω̇ = J \ (-hat(ω) * J * ω + [0 ℓ*kt 0 -ℓ*kt; -ℓ*kt 0 ℓ*kt 0; km -km km -km] * u)
-
-    return [ṙ; q̇; v̇; ω̇]
-end
-
 a = ℓ
 quadrotor = QuadrotorODE.System([0, 0, -9.81], m, J, a, kt, km)
 
 function quad_dynamics_rk4(x, u)
     #RK4 integration with zero-order hold on u
-    f1 = quad_dynamics(x, u)
-    f2 = quad_dynamics(x + 0.5 * h * f1, u)
-    f3 = quad_dynamics(x + 0.5 * h * f2, u)
-    f4 = quad_dynamics(x + h * f3, u)
+    f1 = QuadrotorODE.dynamics(quadrotor, x, u)
+    f2 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f1, u)
+    f3 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f2, u)
+    f4 = QuadrotorODE.dynamics(quadrotor, x + h * f3, u)
     xn = x + (h / 6.0) * (f1 + 2 * f2 + 2 * f3 + f4)
     return xn
 end
@@ -107,7 +90,7 @@ tspan = (0.0, 4.0)
 x0 = vcat([0, 0, 1.0], [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
 prob = ODEProblem(
-    (x, _, _) -> quad_dynamics(x, controller(x)),
+    (x, _, _) -> QuadrotorODE.dynamics(quadrotor, x, controller(x)),
     x0,
     tspan
 )
@@ -147,7 +130,3 @@ for (i, x) in enumerate(xs)
     end
 end
 setanimation!(vis, anim, play=false);
-
-k = 30
-QuadrotorODE.dynamics(quadrotor, xs[k], us[k])
-quad_dynamics(xs[k],us[k])
