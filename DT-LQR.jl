@@ -2,7 +2,7 @@ using Revise
 
 using LinearAlgebra
 using ForwardDiff
-using OrdinaryDiffEq
+using OrdinaryDiffEq, DiffEqCallbacks
 using Plots
 using MatrixEquations
 
@@ -22,15 +22,15 @@ x_eq = vcat(r_eq, q_eq, v_eq, ω_eq)
 u_eq = quadrotor.m * 9.81 / 4 * ones(4)
 
 # Linearization
+h = 1e-2
+
+"""RK4 integration with zero-order hold on u"""
 function quad_dynamics_rk4(x, u)
-    #RK4 integration with zero-order hold on u
-    h = 1e-2
     f1 = QuadrotorODE.dynamics(quadrotor, x, u)
     f2 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f1, u)
     f3 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f2, u)
     f4 = QuadrotorODE.dynamics(quadrotor, x + h * f3, u)
-    xn = x + (h / 6.0) * (f1 + 2 * f2 + 2 * f3 + f4)
-    return xn
+    return x + (h / 6.0) * (f1 + 2 * f2 + 2 * f3 + f4)
 end
 
 fx = ForwardDiff.jacobian(x_ -> quad_dynamics_rk4(x_, u_eq), x_eq)
@@ -56,24 +56,38 @@ tspan = (0.0, 4.0)
 θ = 3 * pi / 8
 x0 = vcat([0, 0, 1.0], [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
+## Callbacks
+ControllerCallback = PeriodicCallback(i -> i.p .= controller(i.u), h, initial_affect=true)
+saved_values = SavedValues(Float64, Vector{Float64})
+InputSavingCallback = SavingCallback((u, t, integrator) -> copy(integrator.p), saved_values)
+
+## Problem
 prob = ODEProblem(
-    (x, _, _) -> QuadrotorODE.dynamics(quadrotor, x, controller(x)),
+    (x, p, _) -> QuadrotorODE.dynamics(quadrotor, x, p),
     x0,
-    tspan
+    tspan,
+    similar(u_eq)
 )
-sol = solve(prob)
+
+## Solution
+sol = solve(prob, callback=CallbackSet(ControllerCallback, InputSavingCallback))
 
 # Plotting
 ts = tspan[1]:1e-2:tspan[2]
 xs = map(t -> sol(t), ts)
-us = map(x -> controller(x), xs)
 
 state_labels = ["x" "y" "z" "q₀" "q₁" "q₂" "q₃" "vx" "vy" "vz" "ωx" "ωy" "ωz"]
 input_labels = ["u₀" "u₁" "u₂" "u₃"]
 
 plt = plot(layout=(2, 1))
-plot!(plt, ts, mapreduce(x -> x', vcat, xs), label=state_labels, subplot=1)
-plot!(plt, ts, mapreduce(u -> u', vcat, us), label=input_labels, subplot=2)
+plot!(
+    plt, ts, mapreduce(x -> x', vcat, xs),
+    label=state_labels, subplot=1
+)
+plot!(
+    plt, saved_values.t, mapreduce(u -> u', vcat, saved_values.saveval),
+    label=input_labels, seriestype=:steppost, subplot=2
+)
 
 display(plt)
 
