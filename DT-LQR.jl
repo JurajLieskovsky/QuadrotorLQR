@@ -10,44 +10,12 @@ using QuadrotorODE
 using MeshCatBenchmarkMechanisms
 
 # Properties of the quadrotor
-
-#Quaternion stuff
-function hat(v)
-    return [0 -v[3] v[2];
-        v[3] 0 -v[1];
-        -v[2] v[1] 0]
-end
-
-function L(q)
-    s = q[1]
-    v = q[2:4]
-    L = [s -v';
-        v s*I+hat(v)]
-    return L
-end
-
-T = Diagonal([1; -ones(3)])
-H = [zeros(1, 3); I]
-
-function qtoQ(q)
-    return H' * T * L(q) * T * L(q) * H
-end
-
-#Quadrotor parameters
-m = 0.5
-ℓ = 0.1750
-J = Diagonal([0.0023, 0.0023, 0.004])
-g = 9.81
-kt = 1.0
-km = 0.0245
-
-h = 5e-2 # 20 Hz
-
-a = ℓ
-quadrotor = QuadrotorODE.System([0, 0, -9.81], m, J, a, kt, km)
+a = 0.1750
+quadrotor = QuadrotorODE.System([0, 0, -9.81], 0.5, Diagonal([0.0023, 0.0023, 0.004]), a, 1.0, 0.0245)
 
 function quad_dynamics_rk4(x, u)
     #RK4 integration with zero-order hold on u
+    h = 0.05
     f1 = QuadrotorODE.dynamics(quadrotor, x, u)
     f2 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f1, u)
     f3 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f2, u)
@@ -63,7 +31,7 @@ v_eq = zeros(3)
 ω_eq = zeros(3)
 
 x_eq = vcat(r_eq, q_eq, v_eq, ω_eq)
-u_eq = m * 9.81 / 4 * ones(4)
+u_eq = quadrotor.m * 9.81 / 4 * ones(4)
 
 # Linearization
 fx = ForwardDiff.jacobian(x_ -> quad_dynamics_rk4(x_, u_eq), x_eq)
