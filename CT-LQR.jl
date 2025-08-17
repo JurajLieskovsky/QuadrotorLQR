@@ -5,13 +5,14 @@ using ForwardDiff
 using OrdinaryDiffEq
 using Plots
 using MatrixEquations
+using StaticArrays
 
 using QuadrotorODE
 using MeshCatBenchmarkMechanisms
 
 # Properties of the quadrotor
 a = 0.3
-quadrotor = QuadrotorODE.System([0, 0, -9.81], 1, I(3), a, 0.01)
+quadrotor = QuadrotorODE.System([0, 0, -9.81], 1, I(3), a, 1, 0.01)
 
 # Equlibrium
 r_eq = zeros(3)
@@ -23,8 +24,8 @@ x_eq = vcat(r_eq, q_eq, v_eq, ω_eq)
 u_eq = 9.81 / 4 * ones(4)
 
 # Linearization
-fx = ForwardDiff.jacobian(x_ -> QuadrotorODE.dynamics(quadrotor, x_, u_eq), x_eq)
-fu = ForwardDiff.jacobian(u_ -> QuadrotorODE.dynamics(quadrotor, x_eq, u_), u_eq)
+# fx = ForwardDiff.jacobian(x_ -> QuadrotorODE.dynamics(quadrotor, x_, u_eq), x_eq)
+# fu = ForwardDiff.jacobian(u_ -> QuadrotorODE.dynamics(quadrotor, x_eq, u_), u_eq)
 
 J = QuadrotorODE.jacobian(x_eq)
 
@@ -47,7 +48,7 @@ x0 = vcat([0, 0, 0], [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
 prob = ODEProblem(
     (x, _, _) -> QuadrotorODE.dynamics(quadrotor, x, controller(x)),
-    x0,
+    SVector{QuadrotorODE.nx}(x0),
     tspan
 )
 sol = solve(prob)
@@ -61,7 +62,7 @@ state_labels = ["x" "y" "z" "q₀" "q₁" "q₂" "q₃" "vx" "vy" "vz" "ωx" "ω
 input_labels = ["u₀" "u₁" "u₂" "u₃"]
 
 plt = plot(layout=(2, 1))
-plot!(plt, ts, mapreduce(x -> x', vcat, xs), label=state_labels, subplot=1)
+plot!(plt, ts, mapreduce(x -> x[1:3]', vcat, xs), label=state_labels, subplot=1)
 plot!(plt, ts, mapreduce(u -> u', vcat, us), label=input_labels, subplot=2)
 
 display(plt)
