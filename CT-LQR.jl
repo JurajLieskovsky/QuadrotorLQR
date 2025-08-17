@@ -11,7 +11,7 @@ using QuadrotorODE
 using MeshCatBenchmarkMechanisms
 
 # Properties of the quadrotor
-quadrotor = QuadrotorODE.System([0, 0, -9.81], 0.5, diagm([0.0023, 0.0023, 0.004]), 0.1750, 1.0, 0.0245)
+quadrotor = QuadrotorODE.System(9.81, 0.5, diagm([0.0023, 0.0023, 0.004]), 0.1750, 1.0, 0.0245)
 
 # Equlibrium
 r_eq = [0, 0, 1.0]
@@ -20,16 +20,16 @@ v_eq = zeros(3)
 ω_eq = zeros(3)
 
 x_eq = vcat(r_eq, q_eq, v_eq, ω_eq)
-u_eq = quadrotor.m * 9.81 / 4 * ones(4)
+u_eq = quadrotor.m * quadrotor.g / 4 * ones(4)
 
 # Linearization
 fx = ForwardDiff.jacobian(x_ -> QuadrotorODE.dynamics(quadrotor, x_, u_eq), x_eq)
 fu = ForwardDiff.jacobian(u_ -> QuadrotorODE.dynamics(quadrotor, x_eq, u_), u_eq)
 
-J = QuadrotorODE.jacobian(x_eq)
+E = QuadrotorODE.jacobian(x_eq)
 
-A = J' * fx * J
-B = J' * fu
+A = E' * fx * E
+B = E' * fu
 
 # LQR design
 # Q = diagm(vcat(1e2 * ones(3), 1e-2 * ones(3), 1e1 * ones(3), 1e-3 * ones(3)))
