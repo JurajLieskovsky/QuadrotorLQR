@@ -24,7 +24,7 @@ u_eq = quadrotor.m * 9.81 / 4 * ones(4)
 # Linearization
 function quad_dynamics_rk4(x, u)
     #RK4 integration with zero-order hold on u
-    h = 0.05
+    h = 1e-2
     f1 = QuadrotorODE.dynamics(quadrotor, x, u)
     f2 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f1, u)
     f3 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f2, u)
