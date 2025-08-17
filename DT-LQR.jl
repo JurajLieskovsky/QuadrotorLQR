@@ -52,9 +52,9 @@ K = inv(R + B' * S * B) * B' * S * A
 controller(x) = u_eq - K * QuadrotorODE.state_difference(x, x_eq)
 
 # Simulation
-tspan = (0.0, 4.0)
+tspan = (0.0, 5.0)
 θ = 3 * pi / 8
-x0 = vcat([0, 0, 1.0], [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
+x0 = vcat(r_eq, [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
 ## Callbacks
 ControllerCallback = PeriodicCallback(i -> i.p .= controller(i.u), h, initial_affect=true)
@@ -81,7 +81,7 @@ input_labels = ["u₀" "u₁" "u₂" "u₃"]
 
 plt = plot(layout=(2, 1))
 plot!(
-    plt, ts, mapreduce(x -> x', vcat, xs),
+    plt, ts, mapreduce(x -> x[1:3]', vcat, xs),
     label=state_labels, subplot=1
 )
 plot!(

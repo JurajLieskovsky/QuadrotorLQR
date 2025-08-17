@@ -14,8 +14,8 @@ using MeshCatBenchmarkMechanisms
 quadrotor = QuadrotorODE.System([0, 0, -9.81], 0.5, diagm([0.0023, 0.0023, 0.004]), 0.1750, 1.0, 0.0245)
 
 # Equlibrium
-r_eq = zeros(3)
-q_eq = [1, 0, 0, 0]
+r_eq = [0, 0, 1.0]
+q_eq = [1.0, 0, 0, 0]
 v_eq = zeros(3)
 ω_eq = zeros(3)
 
@@ -43,9 +43,9 @@ K = inv(R) * B' * S
 controller(x) = u_eq - K * QuadrotorODE.state_difference(x, x_eq)
 
 # Simulation
-tspan = (0.0, 10.0)
+tspan = (0.0, 5.0)
 θ = 3 * pi / 8
-x0 = vcat([0, 0, 0], [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
+x0 = vcat(r_eq, [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
 prob = ODEProblem(
     (x, _, _) -> QuadrotorODE.dynamics(quadrotor, x, controller(x)),
