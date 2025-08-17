@@ -11,8 +11,7 @@ using QuadrotorODE
 using MeshCatBenchmarkMechanisms
 
 # Properties of the quadrotor
-a = 0.3
-quadrotor = QuadrotorODE.System([0, 0, -9.81], 1, I(3), a, 1, 0.01)
+quadrotor = QuadrotorODE.System([0, 0, -9.81], 0.5, diagm([0.0023, 0.0023, 0.004]), 0.1750, 1.0, 0.0245)
 
 # Equlibrium
 r_eq = zeros(3)
@@ -21,11 +20,11 @@ v_eq = zeros(3)
 ω_eq = zeros(3)
 
 x_eq = vcat(r_eq, q_eq, v_eq, ω_eq)
-u_eq = 9.81 / 4 * ones(4)
+u_eq = quadrotor.m * 9.81 / 4 * ones(4)
 
 # Linearization
-# fx = ForwardDiff.jacobian(x_ -> QuadrotorODE.dynamics(quadrotor, x_, u_eq), x_eq)
-# fu = ForwardDiff.jacobian(u_ -> QuadrotorODE.dynamics(quadrotor, x_eq, u_), u_eq)
+fx = ForwardDiff.jacobian(x_ -> QuadrotorODE.dynamics(quadrotor, x_, u_eq), x_eq)
+fu = ForwardDiff.jacobian(u_ -> QuadrotorODE.dynamics(quadrotor, x_eq, u_), u_eq)
 
 J = QuadrotorODE.jacobian(x_eq)
 
@@ -33,8 +32,10 @@ A = J' * fx * J
 B = J' * fu
 
 # LQR design
-Q = diagm(vcat(1e2 * ones(3), 1e-2 * ones(3), 1e1 * ones(3), 1e-3 * ones(3)))
-R = 1e0 * Matrix(I(4))
+# Q = diagm(vcat(1e2 * ones(3), 1e-2 * ones(3), 1e1 * ones(3), 1e-3 * ones(3)))
+# R = 1e0 * Matrix(I(4))
+Q = I(12)
+R = 0.1 * I(4)
 
 S, _ = MatrixEquations.arec(A, B, R, Q)
 K = inv(R) * B' * S
@@ -48,7 +49,7 @@ x0 = vcat([0, 0, 0], [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
 prob = ODEProblem(
     (x, _, _) -> QuadrotorODE.dynamics(quadrotor, x, controller(x)),
-    SVector{QuadrotorODE.nx}(x0),
+    x0,
     tspan
 )
 sol = solve(prob)
@@ -72,7 +73,7 @@ vis = (@isdefined vis) ? vis : Visualizer()
 render(vis)
 
 ## quadrotor and target
-MeshCatBenchmarkMechanisms.set_quadrotor!(vis, 2 * a, 0.12, 0.25)
+MeshCatBenchmarkMechanisms.set_quadrotor!(vis, 2 * quadrotor.a, 0.12, 0.25)
 MeshCatBenchmarkMechanisms.set_target!(vis, 0.12)
 
 ## initial configuration
