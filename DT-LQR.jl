@@ -73,7 +73,8 @@ prob = ODEProblem(
 sol = solve(prob, callback=CallbackSet(ControllerCallback, InputSavingCallback))
 
 # Plotting
-ts = tspan[1]:1e-2:tspan[2]
+Δt = 1e-2
+ts = tspan[1]:Δt:tspan[2]
 xs = map(t -> sol(t), ts)
 
 state_labels = ["x" "y" "z" "q₀" "q₁" "q₂" "q₃" "vx" "vy" "vz" "ωx" "ωy" "ωz"]
@@ -104,7 +105,7 @@ MeshCatBenchmarkMechanisms.set_quadrotor_state!(vis, xs[1])
 MeshCatBenchmarkMechanisms.set_target_position!(vis, x_eq[1:3])
 
 ## animation
-anim = MeshCatBenchmarkMechanisms.Animation(vis, fps=1 / 1e-2)
+anim = MeshCatBenchmarkMechanisms.Animation(vis, fps=1 / Δt)
 for (i, x) in enumerate(xs)
     atframe(anim, i) do
         MeshCatBenchmarkMechanisms.set_quadrotor_state!(vis, x)
