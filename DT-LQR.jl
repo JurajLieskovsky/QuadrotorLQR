@@ -12,6 +12,16 @@ using MeshCatBenchmarkMechanisms
 # Properties of the quadrotor
 quadrotor = QuadrotorODE.System([0, 0, -9.81], 0.5, Diagonal([0.0023, 0.0023, 0.004]), 0.1750, 1.0, 0.0245)
 
+# Equlibrium
+r_eq = [0, 0, 1.0]
+q_eq = [1.0, 0, 0, 0]
+v_eq = zeros(3)
+ω_eq = zeros(3)
+
+x_eq = vcat(r_eq, q_eq, v_eq, ω_eq)
+u_eq = quadrotor.m * 9.81 / 4 * ones(4)
+
+# Linearization
 function quad_dynamics_rk4(x, u)
     #RK4 integration with zero-order hold on u
     h = 0.05
@@ -23,16 +33,6 @@ function quad_dynamics_rk4(x, u)
     return xn
 end
 
-# Equlibrium
-r_eq = [0, 0, 1.0]
-q_eq = [1.0, 0, 0, 0]
-v_eq = zeros(3)
-ω_eq = zeros(3)
-
-x_eq = vcat(r_eq, q_eq, v_eq, ω_eq)
-u_eq = quadrotor.m * 9.81 / 4 * ones(4)
-
-# Linearization
 fx = ForwardDiff.jacobian(x_ -> quad_dynamics_rk4(x_, u_eq), x_eq)
 fu = ForwardDiff.jacobian(u_ -> quad_dynamics_rk4(x_eq, u_), u_eq)
 
