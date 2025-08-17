@@ -10,7 +10,7 @@ using QuadrotorODE
 using MeshCatBenchmarkMechanisms
 
 # Properties of the quadrotor
-quadrotor = QuadrotorODE.System(9.81, 0.5, Diagonal([0.0023, 0.0023, 0.004]), 0.1750, 1.0, 0.0245)
+quadrotor = QuadrotorODE.System(9.81, 0.5, diagm([0.0023, 0.0023, 0.004]), 0.1750, 1.0, 0.0245)
 
 # Equlibrium
 r_eq = [0, 0, 1.0]
@@ -21,9 +21,10 @@ v_eq = zeros(3)
 x_eq = vcat(r_eq, q_eq, v_eq, ω_eq)
 u_eq = quadrotor.m * quadrotor.g / 4 * ones(4)
 
-# Linearization
+# Control period
 h = 1e-2
 
+# Linearization
 """RK4 integration with zero-order hold on u"""
 function quad_dynamics_rk4(x, u)
     f1 = QuadrotorODE.dynamics(quadrotor, x, u)
@@ -41,10 +42,8 @@ A = E' * fx * E
 B = E' * fu
 
 # LQR design
-# Q = diagm(vcat(1e2 * ones(3), 1e-2 * ones(3), 1e1 * ones(3), 1e-3 * ones(3)))
-# R = 1e0 * Matrix(I(4))
-Q = I(12)
-R = 0.1 * I(4)
+Q = diagm(vcat(1e1 * ones(3), 1e1 * ones(3), ones(3), ones(3)))
+R = Matrix(I(4))
 
 S, _ = MatrixEquations.ared(A, B, R, Q)
 K = inv(R + B' * S * B) * B' * S * A
