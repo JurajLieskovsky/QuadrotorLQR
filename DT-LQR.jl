@@ -26,7 +26,7 @@ h = 1e-2
 
 # Linearization
 """RK4 integration with zero-order hold on u"""
-function quad_dynamics_rk4(x, u)
+function dt_dynamics(x, u)
     f1 = QuadrotorODE.dynamics(quadrotor, x, u)
     f2 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f1, u)
     f3 = QuadrotorODE.dynamics(quadrotor, x + 0.5 * h * f2, u)
@@ -34,8 +34,8 @@ function quad_dynamics_rk4(x, u)
     return x + (h / 6.0) * (f1 + 2 * f2 + 2 * f3 + f4)
 end
 
-fx = ForwardDiff.jacobian(x_ -> quad_dynamics_rk4(x_, u_eq), x_eq)
-fu = ForwardDiff.jacobian(u_ -> quad_dynamics_rk4(x_eq, u_), u_eq)
+fx = ForwardDiff.jacobian(x_ -> dt_dynamics(x_, u_eq), x_eq)
+fu = ForwardDiff.jacobian(u_ -> dt_dynamics(x_eq, u_), u_eq)
 
 E = QuadrotorODE.jacobian(x_eq)
 A = E' * fx * E
