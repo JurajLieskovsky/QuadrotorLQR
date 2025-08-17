@@ -36,9 +36,9 @@ end
 fx = ForwardDiff.jacobian(x_ -> quad_dynamics_rk4(x_, u_eq), x_eq)
 fu = ForwardDiff.jacobian(u_ -> quad_dynamics_rk4(x_eq, u_), u_eq)
 
-j = QuadrotorODE.jacobian(x_eq)
-A = j' * fx * j
-B = j' * fu # Should be multiplied by 2 in my case
+J = QuadrotorODE.jacobian(x_eq)
+A = J' * fx * J
+B = J' * fu
 
 # LQR design
 # Q = diagm(vcat(1e2 * ones(3), 1e-2 * ones(3), 1e1 * ones(3), 1e-3 * ones(3)))
