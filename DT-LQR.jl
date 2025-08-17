@@ -10,8 +10,7 @@ using QuadrotorODE
 using MeshCatBenchmarkMechanisms
 
 # Properties of the quadrotor
-a = 0.1750
-quadrotor = QuadrotorODE.System([0, 0, -9.81], 0.5, Diagonal([0.0023, 0.0023, 0.004]), a, 1.0, 0.0245)
+quadrotor = QuadrotorODE.System([0, 0, -9.81], 0.5, Diagonal([0.0023, 0.0023, 0.004]), 0.1750, 1.0, 0.0245)
 
 function quad_dynamics_rk4(x, u)
     #RK4 integration with zero-order hold on u
@@ -83,7 +82,7 @@ vis = (@isdefined vis) ? vis : Visualizer()
 render(vis)
 
 ## quadrotor and target
-MeshCatBenchmarkMechanisms.set_quadrotor!(vis, 2 * a, 0.12, 0.25)
+MeshCatBenchmarkMechanisms.set_quadrotor!(vis, 2 * quadrotor.a, 0.12, 0.25)
 MeshCatBenchmarkMechanisms.set_target!(vis, 0.12)
 
 ## initial configuration
