@@ -96,8 +96,8 @@ vis = (@isdefined vis) ? vis : Visualizer()
 render(vis)
 
 ## quadrotor and target
-MeshCatBenchmarkMechanisms.set_quadrotor!(vis, 2 * quadrotor.a, 0.12, 0.25)
-MeshCatBenchmarkMechanisms.set_target!(vis, 0.12)
+MeshCatBenchmarkMechanisms.set_quadrotor!(vis, 2 * quadrotor.a, 0.07, 0.12)
+MeshCatBenchmarkMechanisms.set_target!(vis, 0.07)
 
 ## initial configuration
 MeshCatBenchmarkMechanisms.set_quadrotor_state!(vis, xs[1])
