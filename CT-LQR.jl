@@ -38,11 +38,14 @@ R = Matrix(I(4))
 S, _ = MatrixEquations.arec(A, B, R, Q)
 K = inv(R) * B' * S
 
-controller(x) = u_eq - K * QuadrotorODE.state_difference(x, x_eq)
+function controller(x)
+    u = u_eq - K * QuadrotorODE.state_difference(x, x_eq)
+    return map(u_k -> u_k >= 0 ? u_k : 0, u)
+end
 
 # Simulation
 tspan = (0.0, 5.0)
-θ = 3 * pi / 8
+θ = 3 * pi / 4
 x0 = vcat(r_eq, [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
 prob = ODEProblem(
