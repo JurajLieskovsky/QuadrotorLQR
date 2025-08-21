@@ -2,7 +2,8 @@ using Revise
 
 using LinearAlgebra
 using ForwardDiff
-using OrdinaryDiffEq, DiffEqCallbacks
+using OrdinaryDiffEq
+using DiffEqCallbacks, NonlinearSolve
 using Plots
 using MatrixEquations
 
@@ -34,6 +35,9 @@ function dt_dynamics(x, u)
     return x + (h / 6.0) * (f1 + 2 * f2 + 2 * f3 + f4)
 end
 
+# """Euler integration with zero-order hold on u"""
+# dt_dynamics(x, u) = x + h * QuadrotorODE.dynamics(quadrotor, x, u)
+
 fx = ForwardDiff.jacobian(x_ -> dt_dynamics(x_, u_eq), x_eq)
 fu = ForwardDiff.jacobian(u_ -> dt_dynamics(x_eq, u_), u_eq)
 
@@ -60,8 +64,15 @@ x0 = vcat(r_eq, [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
 ## Callbacks
 ControllerCallback = PeriodicCallback(i -> i.p .= controller(i.u), h, initial_affect=true)
+
 saved_values = SavedValues(Float64, Vector{Float64})
 InputSavingCallback = SavingCallback((u, t, integrator) -> copy(integrator.p), saved_values)
+
+UnitQuatProjectionCallback = DiffEqCallbacks.ManifoldProjection(
+    (x, _, _) -> [x[4:7]' * x[4:7] - 1], autodiff=AutoForwardDiff()
+)
+
+cbs = CallbackSet(ControllerCallback, InputSavingCallback)
 
 ## Problem
 prob = ODEProblem(
@@ -72,7 +83,7 @@ prob = ODEProblem(
 )
 
 ## Solution
-sol = solve(prob, callback=CallbackSet(ControllerCallback, InputSavingCallback))
+sol = solve(prob, callback=cbs)
 
 # Plotting
 Δt = 1e-2

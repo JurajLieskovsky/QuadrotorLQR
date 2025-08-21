@@ -3,6 +3,7 @@ using Revise
 using LinearAlgebra
 using ForwardDiff
 using OrdinaryDiffEq
+using DiffEqCallbacks, NonlinearSolve
 using Plots
 using MatrixEquations
 using StaticArrays
@@ -48,12 +49,16 @@ tspan = (0.0, 5.0)
 θ = 3 * pi / 4
 x0 = vcat(r_eq, [cos(θ / 2), sin(θ / 2), 0, 0], v_eq, ω_eq)
 
+UnitQuatProjectionCallback = DiffEqCallbacks.ManifoldProjection(
+    (x, _, _) -> [x[4:7]' * x[4:7] - 1], autodiff=AutoForwardDiff()
+)
+
 prob = ODEProblem(
     (x, _, _) -> QuadrotorODE.dynamics(quadrotor, x, controller(x)),
     x0,
     tspan
 )
-sol = solve(prob)
+sol = solve(prob, callback=UnitQuatProjectionCallback)
 
 # Plotting
 Δt = 1e-2
