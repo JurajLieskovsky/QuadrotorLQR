@@ -40,7 +40,7 @@ S, _ = MatrixEquations.arec(A, B, R, Q)
 K = inv(R) * B' * S
 
 function controller(x)
-    u = u_eq - K * QuadrotorODE.state_difference(x, x_eq)
+    u = u_eq - K * QuadrotorODE.state_difference(x, x_eq, :qv)
     return map(u_k -> u_k >= 0 ? u_k : 0, u)
 end
 
